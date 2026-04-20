@@ -8,7 +8,7 @@ TITLE = "Elemental Tower Defense"
 # UI
 UI_BAR_HEIGHT  = 110          # bottom HUD bar
 GAME_HEIGHT    = SCREEN_HEIGHT - UI_BAR_HEIGHT   # 610px playfield
- 
+
 # Colors
 WHITE      = (255, 255, 255)
 BLACK      = (0,   0,   0)
@@ -34,23 +34,42 @@ ROWS = GAME_HEIGHT  // TILE_SIZE          # 9
 # Player
 STARTING_MONEY = 100
 STARTING_LIVES = 10
- 
+
 # Tower slot bar
 TOWER_SLOTS     = 10
 SLOT_SIZE       = 80
 SLOT_PADDING    = 8
 
-# Tower definitions  { id, name, cost, color, unlocked }
+# Tower definitions  { id, name, cost, damage, description, color, unlocked }
 TOWER_DEFS = [
-    {"id": "earth", "name": "Earth Tower", "cost": 10,  "color": BROWN,      "unlocked": True},
-    {"id": "fire",  "name": "Fire Tower",  "cost": 25,  "color": ORANGE,     "unlocked": False},
-    {"id": "water", "name": "Water Tower", "cost": 20,  "color": BLUE,       "unlocked": False},
-    {"id": "wind",  "name": "Wind Tower",  "cost": 30,  "color": LIGHT_GRAY, "unlocked": False},
-    {"id": "ice",   "name": "Ice Tower",   "cost": 35,  "color": ICE, "unlocked": False},
-    {"id": "t6",    "name": "???",         "cost": 0,   "color": GRAY,       "unlocked": False},
-    {"id": "t7",    "name": "???",         "cost": 0,   "color": GRAY,       "unlocked": False},
-    {"id": "t8",    "name": "???",         "cost": 0,   "color": GRAY,       "unlocked": False},
-    {"id": "t9",    "name": "???",         "cost": 0,   "color": GRAY,       "unlocked": False},
-    {"id": "t10",   "name": "???",         "cost": 0,   "color": GRAY,       "unlocked": False},
+    {
+        "id": "earth", "name": "Earth Tower", "cost": 10, "damage": 5,
+        "description": "A sturdy tower made of rock and soil. Slow but reliable. Good for early waves.",
+        "color": BROWN, "unlocked": True,
+    },
+    {
+        "id": "fire", "name": "Fire Tower", "cost": 25, "damage": 15,
+        "description": "Burns enemies with intense heat. High damage but costs more to build.",
+        "color": ORANGE, "unlocked": True,
+    },
+    {
+        "id": "water", "name": "Water Tower", "cost": 20, "damage": 10,
+        "description": "Slows enemies with a torrent of water while dealing moderate damage.",
+        "color": BLUE, "unlocked": True,
+    },
+    {
+        "id": "wind", "name": "Wind Tower", "cost": 30, "damage": 12,
+        "description": "Pushes enemies back with gale-force blasts. Can hit multiple targets.",
+        "color": LIGHT_GRAY, "unlocked": True,
+    },
+    {
+        "id": "ice", "name": "Ice Tower", "cost": 35, "damage": 8,
+        "description": "Freezes enemies solid. Low damage but hard-freezes targets in place.",
+        "color": ICE, "unlocked": True,
+    },
+    {"id": "t6",  "name": "???", "cost": 0, "damage": 0, "description": "Not yet discovered.", "color": GRAY, "unlocked": False},
+    {"id": "t7",  "name": "???", "cost": 0, "damage": 0, "description": "Not yet discovered.", "color": GRAY, "unlocked": False},
+    {"id": "t8",  "name": "???", "cost": 0, "damage": 0, "description": "Not yet discovered.", "color": GRAY, "unlocked": False},
+    {"id": "t9",  "name": "???", "cost": 0, "damage": 0, "description": "Not yet discovered.", "color": GRAY, "unlocked": False},
+    {"id": "t10", "name": "???", "cost": 0, "damage": 0, "description": "Not yet discovered.", "color": GRAY, "unlocked": False},
 ]
-

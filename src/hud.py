@@ -40,19 +40,25 @@ class HUD:
         money_value = self.font_large.render(f"${money}", True, GOLD)
         surface.blit(money_label, (x, y))
         surface.blit(money_value, (x, y + 20))
-
-        # Lives — below money
+        
+        # --- Lives: heart icon + red number ---
         lives_label = self.font_medium.render("LIVES", True, LIGHT_GRAY)
-        surface.blit(lives_label, (x, y + 52))
+        surface.blit(lives_label, (x, y + 50))
         heart_x = x
-        for i in range(STARTING_LIVES):
-            color = RED if i < lives else DARK_GRAY
-            hx = heart_x + i * 18
-            hy = y + 72
-            pygame.draw.circle(surface, color, (hx + 4, hy + 4), 5)
-            pygame.draw.circle(surface, color, (hx + 10, hy + 4), 5)
-            points = [(hx, hy + 6), (hx + 7, hy + 14), (hx + 14, hy + 6)]
-            pygame.draw.polygon(surface, color, points)
+        heart_cx = x + 12
+        heart_cy = y + 78
+        color = RED
+        hx = heart_x 
+        hy = y + 72
+        pygame.draw.circle(surface, color, (hx + 4, hy + 4), 5)
+        pygame.draw.circle(surface, color, (hx + 10, hy + 4), 5)
+        points = [(hx, hy + 6), (hx + 7, hy + 14), (hx + 14, hy + 6)]
+        pygame.draw.polygon(surface, color, points)
+
+
+
+        lives_surf = self.font_large.render(str(lives), True, RED)
+        surface.blit(lives_surf, (heart_cx + 16, heart_cy - lives_surf.get_height() // 2))
 
         # ESC hint — far right
         hint = self.font_small.render("ESC  quit", True, GRAY)
