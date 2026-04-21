@@ -1,5 +1,6 @@
 import pygame
 from src.settings import *
+from src.utils import load_tower_definitions
 from src.hud import HUD
 from src.tower import Tower
 from src.info_screen import InfoScreen
@@ -17,8 +18,8 @@ class Game:
         self.money = STARTING_MONEY
         self.lives = STARTING_LIVES
 
-        # Tower data
-        self.tower_defs = [dict(t) for t in TOWER_DEFS]
+        # Tower data — loaded from towers.json
+        self.tower_defs = load_tower_definitions()
 
         # Placed towers
         self.placed_towers  = []
@@ -150,3 +151,4 @@ class Game:
     # ------------------------------------------------------------------
     def quit(self):
         pygame.quit()
+
