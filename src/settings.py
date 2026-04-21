@@ -39,3 +39,9 @@ STARTING_LIVES = 10
 TOWER_SLOTS     = 10
 SLOT_SIZE       = 80
 SLOT_PADDING    = 8
+
+# Waves
+TIME_BETWEEN_WAVES = 15        # seconds between end of one wave and start of next
+ 
+# Default level to load on startup
+DEFAULT_LEVEL = "levels/level_1.json"
