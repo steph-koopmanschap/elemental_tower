@@ -1,9 +1,14 @@
 import pygame
 from src.settings import *
-from src.utils import load_tower_definitions
+from src.utils import load_tower_definitions, load_level, TILE_PATH, TILE_START, TILE_END, TILE_EMPTY
 from src.hud import HUD
 from src.tower import Tower
 from src.info_screen import InfoScreen
+
+# Colours for path tiles drawn in game
+_PATH_COLOR  = (160, 130, 80)
+_START_COLOR = (34,  180, 34)
+_END_COLOR   = (220, 50,  50)
 
 
 class Game:
@@ -21,6 +26,10 @@ class Game:
         # Tower data — loaded from towers.json
         self.tower_defs = load_tower_definitions()
 
+        # Level grid — None means no level loaded (all tiles placeable)
+        self.level_grid  = None    # 2-D list of ints, set by load_level()
+        self.path_cells  = set()   # (col, row) cells that are PATH/START/END
+
         # Placed towers
         self.placed_towers  = []
         self.occupied_cells = set()
@@ -35,6 +44,24 @@ class Game:
         self.show_info   = False
 
         self.font_small = pygame.font.SysFont("monospace", 14)
+        self.font_label = pygame.font.SysFont("monospace", 12)
+
+    # ------------------------------------------------------------------
+    def load_level_file(self, path: str):
+        """Load a level .json file and register its path cells."""
+        data = load_level(path)
+        if data is None:
+            return
+        self.level_grid = data["grid"]
+        self.path_cells = set()
+        for r, row in enumerate(self.level_grid):
+            for c, tile in enumerate(row):
+                if tile in (TILE_PATH, TILE_START, TILE_END):
+                    self.path_cells.add((c, r))
+        # Remove any already-placed towers that are now on the path
+        self.placed_towers  = [t for t in self.placed_towers
+                               if (t.col, t.row) not in self.path_cells]
+        self.occupied_cells = {(t.col, t.row) for t in self.placed_towers}
 
     # ------------------------------------------------------------------
     def run(self):
@@ -53,7 +80,6 @@ class Game:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_i:
                     self.show_info = not self.show_info
-
                 elif event.key == pygame.K_ESCAPE:
                     if self.show_info:
                         self.show_info = False
@@ -82,7 +108,11 @@ class Game:
         if self.selected_slot is None:
             return
         tdef = self.tower_defs[self.selected_slot]
-        if not tdef["unlocked"] or (col, row) in self.occupied_cells:
+        if not tdef["unlocked"]:
+            return
+        if (col, row) in self.occupied_cells:
+            return
+        if (col, row) in self.path_cells:      # ← blocked by path
             return
         if self.money < tdef["cost"]:
             return
@@ -107,17 +137,32 @@ class Game:
         self._draw_placement_preview()
         self.hud.draw(self.screen, self.money, self.lives,
                       self.tower_defs, self.selected_slot)
-
         if self.show_info:
             self.info_screen.draw(self.screen, self.tower_defs)
-
         pygame.display.flip()
 
     def _draw_grid(self):
-        for col in range(COLS):
-            for row in range(ROWS):
+        for row in range(ROWS):
+            for col in range(COLS):
                 rect = pygame.Rect(col * TILE_SIZE, row * TILE_SIZE,
                                    TILE_SIZE, TILE_SIZE)
+
+                # Determine tile colour
+                if self.level_grid is not None and row < len(self.level_grid) and col < len(self.level_grid[row]):
+                    tile = self.level_grid[row][col]
+                    if tile == TILE_PATH:
+                        pygame.draw.rect(self.screen, _PATH_COLOR, rect)
+                    elif tile == TILE_START:
+                        pygame.draw.rect(self.screen, _START_COLOR, rect)
+                        lbl = self.font_label.render("START", True, WHITE)
+                        self.screen.blit(lbl, (rect.centerx - lbl.get_width()//2,
+                                               rect.centery - lbl.get_height()//2))
+                    elif tile == TILE_END:
+                        pygame.draw.rect(self.screen, _END_COLOR, rect)
+                        lbl = self.font_label.render("END", True, WHITE)
+                        self.screen.blit(lbl, (rect.centerx - lbl.get_width()//2,
+                                               rect.centery - lbl.get_height()//2))
+
                 pygame.draw.rect(self.screen, GRAY, rect, 1)
 
     def _draw_towers(self):
@@ -129,12 +174,12 @@ class Game:
             return
         col, row   = self.cursor_tile
         tdef       = self.tower_defs[self.selected_slot]
-        occupied   = (col, row) in self.occupied_cells
+        blocked    = (col, row) in self.occupied_cells or (col, row) in self.path_cells
         affordable = self.money >= tdef["cost"]
         rect = pygame.Rect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE)
 
         ghost = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
-        if occupied or not affordable:
+        if blocked or not affordable:
             ghost.fill((220, 50, 50, 100))
             self.screen.blit(ghost, rect.topleft)
             pygame.draw.rect(self.screen, RED, rect, 2)
