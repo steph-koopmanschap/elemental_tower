@@ -45,3 +45,7 @@ TIME_BETWEEN_WAVES = 15        # seconds between end of one wave and start of ne
  
 # Default level to load on startup
 DEFAULT_LEVEL = "levels/level_1.json"
+
+# Projectiles
+PROJECTILE_SPEED  = 300    # pixels per second (same for all towers)
+PROJECTILE_RADIUS = 5      # pixels

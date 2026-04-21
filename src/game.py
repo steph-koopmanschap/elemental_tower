@@ -24,8 +24,8 @@ class Game:
         self.running = True
 
         # Fonts
-        self.font_small  = pygame.font.SysFont("monospace", 14)
-        self.font_label  = pygame.font.SysFont("monospace", 12)
+        self.font_small    = pygame.font.SysFont("monospace", 14)
+        self.font_label    = pygame.font.SysFont("monospace", 12)
         self.font_gameover = pygame.font.SysFont("monospace", 72, bold=True)
         self.font_go_sub   = pygame.font.SysFont("monospace", 26)
 
@@ -46,6 +46,9 @@ class Game:
         self.placed_towers  = []
         self.occupied_cells = set()
 
+        # Live projectiles
+        self.projectiles = []
+
         # Selection / cursor
         self.selected_slot = None
         self.cursor_tile   = None
@@ -58,7 +61,7 @@ class Game:
         self.info_screen = InfoScreen()
         self.show_info   = False
 
-        # Load default level immediately
+        # Load default level
         if os.path.exists(DEFAULT_LEVEL):
             self._load_level(DEFAULT_LEVEL)
         else:
@@ -79,18 +82,18 @@ class Game:
                 if tile in (TILE_PATH, TILE_START, TILE_END):
                     self.path_cells.add((c, r))
 
-        self.waypoints = build_waypoints(self.level_grid)
+        self.waypoints    = build_waypoints(self.level_grid)
         self.wave_manager = WaveManager(self.waypoints)
 
-        # Clear any towers on path
         self.placed_towers  = [t for t in self.placed_towers
                                if (t.col, t.row) not in self.path_cells]
         self.occupied_cells = {(t.col, t.row) for t in self.placed_towers}
+        self.projectiles    = []
 
     # ------------------------------------------------------------------
     def run(self):
         while self.running:
-            dt = self.clock.tick(FPS) / 1000.0   # seconds
+            dt = self.clock.tick(FPS) / 1000.0
             self._handle_events()
             self._update(dt)
             self._draw()
@@ -119,13 +122,11 @@ class Game:
                     self._handle_click(event.pos)
 
     def _handle_click(self, pos):
-        # Start button in HUD?
         if self.hud.start_button_rect and self.hud.start_button_rect.collidepoint(pos):
             if self.wave_manager:
                 self.wave_manager.start_game()
             return
 
-        # Tower slot?
         slot_i = self.hud.get_slot_at(pos)
         if slot_i is not None:
             tdef = self.tower_defs[slot_i]
@@ -133,7 +134,6 @@ class Game:
                 self.selected_slot = None if self.selected_slot == slot_i else slot_i
             return
 
-        # Grid tile
         col, row = pos[0] // TILE_SIZE, pos[1] // TILE_SIZE
         if 0 <= col < COLS and 0 <= row < ROWS:
             self._try_place_tower(col, row)
@@ -144,9 +144,7 @@ class Game:
         tdef = self.tower_defs[self.selected_slot]
         if not tdef["unlocked"]:
             return
-        if (col, row) in self.occupied_cells:
-            return
-        if (col, row) in self.path_cells:
+        if (col, row) in self.occupied_cells or (col, row) in self.path_cells:
             return
         if self.money < tdef["cost"]:
             return
@@ -159,7 +157,7 @@ class Game:
         if self.game_over:
             return
 
-        # Cursor tracking
+        # Cursor
         mx, my = pygame.mouse.get_pos()
         col, row = mx // TILE_SIZE, my // TILE_SIZE
         if 0 <= col < COLS and 0 <= row < ROWS and my < GAME_HEIGHT:
@@ -167,7 +165,7 @@ class Game:
         else:
             self.cursor_tile = None
 
-        # Waves
+        # Wave manager — moves enemies, returns outcomes
         if self.wave_manager:
             lives_lost, money_earned = self.wave_manager.update(dt)
             self.lives -= lives_lost
@@ -176,20 +174,46 @@ class Game:
                 self.lives     = 0
                 self.game_over = True
 
+        # Towers — pick targets and fire
+        if self.wave_manager:
+            enemies = self.wave_manager.enemies
+            for tower in self.placed_towers:
+                new_projs = tower.update(dt, enemies)
+                self.projectiles.extend(new_projs)
+
+        # Projectiles — move, detect hits, collect money from kills
+        live_projs = []
+        for proj in self.projectiles:
+            proj.update(dt)
+            if not proj.expired:
+                live_projs.append(proj)
+            elif proj.hit:
+                # Check if the target just died from this hit
+                if proj.target.dead:
+                    self.money += proj.target.reward
+                    # Zero out reward so double-credit can't happen
+                    proj.target.reward = 0
+        self.projectiles = live_projs
+
     # ------------------------------------------------------------------
     def _draw(self):
         self.screen.fill(DARK_GRAY)
         self._draw_grid()
         self._draw_towers()
+
         if self.wave_manager:
             self.wave_manager.draw(self.screen)
+
+        # Projectiles drawn on top of enemies
+        for proj in self.projectiles:
+            proj.draw(self.screen)
+
         self._draw_placement_preview()
 
-        # HUD — pass wave info
-        wave_num   = self.wave_manager.wave_number    if self.wave_manager else 0
-        total_waves= self.wave_manager.total_waves    if self.wave_manager else 0
-        wm_state   = self.wave_manager.state          if self.wave_manager else WAITING_FOR_START
-        countdown  = self.wave_manager.between_countdown if self.wave_manager else 0
+        wave_num    = self.wave_manager.wave_number       if self.wave_manager else 0
+        total_waves = self.wave_manager.total_waves       if self.wave_manager else 0
+        wm_state    = self.wave_manager.state             if self.wave_manager else WAITING_FOR_START
+        countdown   = self.wave_manager.between_countdown if self.wave_manager else 0
 
         self.hud.draw(self.screen, self.money, self.lives,
                       self.tower_defs, self.selected_slot,
@@ -206,6 +230,7 @@ class Game:
 
         pygame.display.flip()
 
+    # ------------------------------------------------------------------
     def _draw_grid(self):
         for row in range(ROWS):
             for col in range(COLS):
@@ -259,8 +284,7 @@ class Game:
         overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 170))
         self.screen.blit(overlay, (0, 0))
-
-        go = self.font_gameover.render("GAME  OVER", True, RED)
+        go  = self.font_gameover.render("GAME  OVER", True, RED)
         sub = self.font_go_sub.render("Press  ESC  to quit", True, LIGHT_GRAY)
         self.screen.blit(go,  (SCREEN_WIDTH//2 - go.get_width()//2,
                                 SCREEN_HEIGHT//2 - go.get_height()//2 - 20))

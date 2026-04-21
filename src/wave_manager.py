@@ -165,6 +165,7 @@ class WaveManager:
                 self.state = WAVE_IN_PROGRESS
 
         # --- Move enemies and collect outcomes ---
+        # Note: money rewards for kills are handled by game.py via projectile hits
         alive = []
         for enemy in self.enemies:
             enemy.update(dt)
@@ -172,7 +173,7 @@ class WaveManager:
             if enemy.reached_end:
                 lives_lost += 1          # enemy escaped
             elif enemy.dead:
-                money_earned += enemy.reward
+                pass                     # reward already credited by projectile hit
             else:
                 alive.append(enemy)
 
