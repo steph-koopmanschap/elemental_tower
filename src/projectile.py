@@ -7,27 +7,23 @@ from src.settings import PROJECTILE_SPEED, PROJECTILE_RADIUS
 
 
 class Projectile:
-    def __init__(self, x: float, y: float, target, damage: int, color: tuple):
-        """
-        x, y    : pixel origin (tower centre)
-        target  : Enemy instance to home toward
-        damage  : HP to remove on hit
-        color   : RGB tuple — matches the firing tower
-        """
-        self.x      = x
-        self.y      = y
-        self.target = target
-        self.damage = damage
-        self.color  = color
-        self.hit    = False     # True once it has struck its target
-        self.missed = False     # True if target died before impact
+    def __init__(self, x: float, y: float, target, damage: int, color: tuple,
+                 is_crit: bool = False, dot_damage: int = 0):
+        self.x          = x
+        self.y          = y
+        self.target     = target
+        self.damage     = damage
+        self.color      = color
+        self.is_crit    = is_crit    # whether this shot was a critical hit
+        self.dot_damage = dot_damage # HP per DOT tick (0 = no DOT)
+        self.hit        = False
+        self.missed     = False
 
     # ------------------------------------------------------------------
     def update(self, dt: float):
         if self.hit or self.missed:
             return
 
-        # If the target died before we arrived, discard the projectile
         if self.target.dead or self.target.reached_end:
             self.missed = True
             return
@@ -38,9 +34,12 @@ class Projectile:
         move   = PROJECTILE_SPEED * dt
 
         if move >= dist:
-            # Close enough — register hit
             self.x, self.y = tx, ty
+            # Apply direct damage
             self.target.take_damage(self.damage)
+            # Apply DOT if any (does not stack — only refresh if new damage is higher)
+            if self.dot_damage > 0 and not self.target.dead:
+                self.target.apply_dot(self.dot_damage)
             self.hit = True
         else:
             self.x += dx / dist * move
@@ -50,13 +49,16 @@ class Projectile:
     def draw(self, surface):
         if self.hit or self.missed:
             return
-        # Bright filled circle with a dark outline for contrast
         ix, iy = int(self.x), int(self.y)
-        pygame.draw.circle(surface, (0, 0, 0),  (ix, iy), PROJECTILE_RADIUS + 1)
+        # Crits get a larger, glowing outline
+        if self.is_crit:
+            pygame.draw.circle(surface, (255, 255, 100), (ix, iy), PROJECTILE_RADIUS + 3)
+            pygame.draw.circle(surface, (255, 200, 0),   (ix, iy), PROJECTILE_RADIUS + 1)
+        else:
+            pygame.draw.circle(surface, (0, 0, 0), (ix, iy), PROJECTILE_RADIUS + 1)
         pygame.draw.circle(surface, self.color, (ix, iy), PROJECTILE_RADIUS)
 
     # ------------------------------------------------------------------
     @property
     def expired(self):
         return self.hit or self.missed
-

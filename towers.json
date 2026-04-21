@@ -3,9 +3,11 @@
         "id": "earth",
         "name": "Earth Tower",
         "cost": 10,
-        "damage": 5,
+        "damage": 0,
         "firing_rate": 1.0,
         "range": 3,
+        "crit_chance": 0.05,
+        "dot_damage": 1,
         "color": [101, 67, 33],
         "unlocked": true,
         "description": "A sturdy tower made of rock and soil. Slow but reliable. Good for early waves."
@@ -17,9 +19,11 @@
         "damage": 15,
         "firing_rate": 1.5,
         "range": 4,
+        "crit_chance": 0.10,
+        "dot_damage": 4,
         "color": [210, 120, 30],
-        "unlocked": true,
-        "description": "Burns enemies with intense heat. High damage but costs more to build."
+        "unlocked": false,
+        "description": "Burns enemies with intense heat. High damage and ignites targets over time."
     },
     {
         "id": "water",
@@ -28,8 +32,10 @@
         "damage": 10,
         "firing_rate": 2.0,
         "range": 3,
+        "crit_chance": 0.05,
+        "dot_damage": 0,
         "color": [50, 100, 220],
-        "unlocked": true,
+        "unlocked": false,
         "description": "Slows enemies with a torrent of water while dealing moderate damage."
     },
     {
@@ -39,8 +45,10 @@
         "damage": 12,
         "firing_rate": 2.5,
         "range": 5,
+        "crit_chance": 0.12,
+        "dot_damage": 0,
         "color": [180, 180, 180],
-        "unlocked": true,
+        "unlocked": false,
         "description": "Pushes enemies back with gale-force blasts. Can hit multiple targets."
     },
     {
@@ -50,9 +58,11 @@
         "damage": 8,
         "firing_rate": 0.8,
         "range": 3,
+        "crit_chance": 0.05,
+        "dot_damage": 2,
         "color": [160, 220, 255],
-        "unlocked": true,
-        "description": "Freezes enemies solid. Low damage but hard-freezes targets in place."
+        "unlocked": false,
+        "description": "Freezes enemies solid. Frostbite lingers long after the initial hit."
     },
     {
         "id": "lava",
@@ -61,9 +71,11 @@
         "damage": 22,
         "firing_rate": 0.6,
         "range": 4,
+        "crit_chance": 0.08,
+        "dot_damage": 6,
         "color": [200, 50, 10],
-        "unlocked": true,
-        "description": "Erupts molten rock at enemies. Devastating damage but very slow to fire."
+        "unlocked": false,
+        "description": "Erupts molten rock at enemies. Devastating damage and scorches targets."
     },
     {
         "id": "spirit",
@@ -72,9 +84,11 @@
         "damage": 18,
         "firing_rate": 3.0,
         "range": 6,
+        "crit_chance": 0.20,
+        "dot_damage": 3,
         "color": [180, 100, 255],
-        "unlocked": true,
-        "description": "Channels ethereal energy. Fast fire rate and the longest range of all towers."
+        "unlocked": false,
+        "description": "Channels ethereal energy. High crit chance and haunts struck enemies."
     },
     {
         "id": "t8",
@@ -83,8 +97,10 @@
         "damage": 0,
         "firing_rate": 0,
         "range": 0,
+        "crit_chance": 0,
+        "dot_damage": 0,
         "color": [100, 100, 100],
-        "unlocked": true,
+        "unlocked": false,
         "description": "Not yet discovered."
     },
     {
@@ -94,6 +110,8 @@
         "damage": 0,
         "firing_rate": 0,
         "range": 0,
+        "crit_chance": 0,
+        "dot_damage": 0,
         "color": [100, 100, 100],
         "unlocked": false,
         "description": "Not yet discovered."
@@ -105,8 +123,11 @@
         "damage": 0,
         "firing_rate": 0,
         "range": 0,
+        "crit_chance": 0,
+        "dot_damage": 0,
         "color": [100, 100, 100],
         "unlocked": false,
         "description": "Not yet discovered."
     }
 ]
+

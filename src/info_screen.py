@@ -17,22 +17,22 @@ def _draw_heart(surface, cx, cy, size, color):
 class InfoScreen:
     """Full-screen overlay listing all towers and their properties."""
 
-    PANEL_W = 1140
+    PANEL_W = 1220
     PANEL_H = 600
     ROW_H   = 46
     SWATCH  = 32
     PAD     = 24
 
-    # (x-offset from content left, header text, header color)
-    # Content area = PAD .. PANEL_W-PAD  (~1092px usable)
-    # Layout:  TOWER(0-219)  COST(220)  DMG(300)  RATE(390)  RANGE(490)  DESCRIPTION(580-end)
+    # Layout: TOWER(0) COST(200) DMG(275) RATE(350) RANGE(430) CRIT(505) DOT(575) DESC(650)
     COLUMNS = [
         (0,   "TOWER",       WHITE),
-        (220, "COST",        GOLD),
-        (300, "DMG",         RED),
-        (390, "RATE",        (160, 220, 255)),
-        (490, "RANGE",       GREEN),
-        (580, "DESCRIPTION", LIGHT_GRAY),
+        (200, "COST",        GOLD),
+        (275, "DMG",         RED),
+        (350, "RATE",        (160, 220, 255)),
+        (430, "RANGE",       GREEN),
+        (505, "CRIT",        (255, 220, 60)),
+        (575, "DOT",         (230, 120, 0)),
+        (650, "DESCRIPTION", LIGHT_GRAY),
     ]
 
     def __init__(self):
@@ -113,7 +113,19 @@ class InfoScreen:
 
                 # --- Range ---
                 rng_s = self.font_body.render(f"{tdef['range']} tiles", True, GREEN)
-                surface.blit(rng_s, (hx + 490, mid_y - rng_s.get_height() // 2))
+                surface.blit(rng_s, (hx + 430, mid_y - rng_s.get_height() // 2))
+
+                # --- Crit chance ---
+                crit_pct = int(tdef.get('crit_chance', 0) * 100)
+                crit_s = self.font_body.render(f"{crit_pct}%", True, (255, 220, 60))
+                surface.blit(crit_s, (hx + 505, mid_y - crit_s.get_height() // 2))
+
+                # --- DOT damage ---
+                dot_val  = tdef.get('dot_damage', 0)
+                dot_text = f"{dot_val}/tick" if dot_val > 0 else "—"
+                dot_col  = (230, 120, 0) if dot_val > 0 else GRAY
+                dot_s = self.font_body.render(dot_text, True, dot_col)
+                surface.blit(dot_s, (hx + 575, mid_y - dot_s.get_height() // 2))
 
                 # --- Description ---
                 desc = tdef["description"]

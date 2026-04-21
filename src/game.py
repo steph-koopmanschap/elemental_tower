@@ -8,6 +8,7 @@ from src.hud import HUD
 from src.tower import Tower
 from src.info_screen import InfoScreen
 from src.wave_manager import WaveManager, WAITING_FOR_START, GAME_OVER
+from src.upgrade_screen import UpgradeScreen
 
 # Tile colours
 _PATH_COLOR  = (160, 130, 80)
@@ -58,8 +59,9 @@ class Game:
 
         # UI
         self.hud         = HUD()
-        self.info_screen = InfoScreen()
-        self.show_info   = False
+        self.info_screen   = InfoScreen()
+        self.show_info     = False
+        self.upgrade_screen = UpgradeScreen()
 
         # Load default level
         if os.path.exists(DEFAULT_LEVEL):
@@ -118,7 +120,9 @@ class Game:
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if self.game_over:
                     return
-                if not self.show_info:
+                if self.upgrade_screen.visible:
+                    self.upgrade_screen.handle_click(event.pos)
+                elif not self.show_info:
                     self._handle_click(event.pos)
 
     def _handle_click(self, pos):
@@ -136,7 +140,18 @@ class Game:
 
         col, row = pos[0] // TILE_SIZE, pos[1] // TILE_SIZE
         if 0 <= col < COLS and 0 <= row < ROWS:
-            self._try_place_tower(col, row)
+            # Check if there's already a tower here — open upgrade screen
+            clicked_tower = next(
+                (t for t in self.placed_towers if t.col == col and t.row == row), None)
+            if clicked_tower:
+                self.upgrade_screen.show(
+                    clicked_tower,
+                    get_money_fn   = lambda: self.money,
+                    spend_money_fn = lambda n: setattr(self, 'money', self.money - n),
+                )
+                self.selected_slot = None
+            else:
+                self._try_place_tower(col, row)
 
     def _try_place_tower(self, col, row):
         if self.selected_slot is None:
@@ -188,12 +203,17 @@ class Game:
             if not proj.expired:
                 live_projs.append(proj)
             elif proj.hit:
-                # Check if the target just died from this hit
                 if proj.target.dead:
-                    self.money += proj.target.reward
-                    # Zero out reward so double-credit can't happen
-                    proj.target.reward = 0
+                    self.money        += proj.target.reward
+                    proj.target.reward = 0   # prevent double-credit
         self.projectiles = live_projs
+
+        # DOT kills — enemies that died from damage-over-time this frame
+        if self.wave_manager:
+            for enemy in getattr(self.wave_manager, 'dot_kills', []):
+                if enemy.reward > 0:
+                    self.money        += enemy.reward
+                    enemy.reward       = 0
 
     # ------------------------------------------------------------------
     def _draw(self):
@@ -224,6 +244,8 @@ class Game:
 
         if self.show_info:
             self.info_screen.draw(self.screen, self.tower_defs)
+
+        self.upgrade_screen.draw(self.screen)
 
         if self.game_over:
             self._draw_game_over()

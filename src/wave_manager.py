@@ -164,16 +164,19 @@ class WaveManager:
             if self._spawned_count >= wave_def["count"]:
                 self.state = WAVE_IN_PROGRESS
 
-        # --- Move enemies and collect outcomes ---
-        # Note: money rewards for kills are handled by game.py via projectile hits
+        # --- Move enemies, tick DOT, collect outcomes ---
+        # Projectile-kill rewards are handled in game.py.
+        # DOT-kill rewards are also handled in game.py via dot_kills list.
+        self.dot_kills = []   # enemies killed by DOT this frame
         alive = []
         for enemy in self.enemies:
             enemy.update(dt)
 
             if enemy.reached_end:
-                lives_lost += 1          # enemy escaped
+                lives_lost += 1
             elif enemy.dead:
-                pass                     # reward already credited by projectile hit
+                # Could have been killed by DOT — game.py checks and awards reward
+                self.dot_kills.append(enemy)
             else:
                 alive.append(enemy)
 
