@@ -41,7 +41,9 @@ class Enemy:
     # ------------------------------------------------------------------
     def update(self, dt: float):
         """Move toward next waypoint. dt = seconds since last frame."""
-        if self.reached_end or self.dead or self.waypoint_idx >= len(self.waypoints):
+        if self.dead:
+            return                   # dead enemies stay put — do NOT set reached_end
+        if self.reached_end or self.waypoint_idx >= len(self.waypoints):
             self.reached_end = True
             return
 
